@@ -1,29 +1,32 @@
+///////////////////////////////////////////////////////////////////////////////
+/* Define options */
+
 var gameOptions = {
   height: 600,
   width: 900,
   nEnemies: 30,
   padding: 20
-}
+};
 
 var gameStats = {
   score: 10,
   highScore: 0,
-  startTime:+new Date
-}
+  startTime: new Date()
+};
 
 var enemyOptions = {
   rx: 10,
   ry: 15,
   angle: 0
-}
+};
 
 var playerOptions = {
   size: 20,
   hitBox: 25
-}
+};
 
-//playerOptions.hitBox = playerOptions.size/2 + enemyOptions.r/2;
-
+///////////////////////////////////////////////////////////////////////////////
+/* Define functions */
 
 //create main svg element
 var svg = d3.select("body")
@@ -35,9 +38,7 @@ var svg = d3.select("body")
   .style("background-color", "white");
 
 
-
-
-// generating new ellipses
+// generate new enemies
 var enemies = svg.selectAll("ellipse")
   .data(d3.range(gameOptions.nEnemies));
 
@@ -55,7 +56,7 @@ enemies
   .classed("enemies", true);
 
 // first invocation: update the position for existing enemies
-// subsequent invoation: update the position for one enemy
+// subsequent invocation: update the position for one enemy
 var update = function(element){
   element
     .transition()
@@ -66,23 +67,17 @@ var update = function(element){
       cy:function(d) { return Math.random() * gameOptions.height ; },
       //transform: function(d){ return "rotate(" + d +","+ d+"," + d+")";}
     })
+    // call update() at end of transition in order to chain
+    // transitions together. This allows us to use d3 timer mechanism
+    // instead of setInterval(update(), time)
     .each('end', function(){
-      update(d3.select(this))
+      update(d3.select(this));
     });
-
 };
-
-update(enemies);
-
-
-setInterval(function(){
-  (detectCollision()) ? console.log('touched') : console.log("bjhdsb");
-  updateScore();
-}, 100);
-
 
 
 // sets up D3 drag listener.
+// the player is draggable
 var drag = d3.behavior.drag()
     .on("drag", function(){
       d3.select(this)
@@ -92,11 +87,8 @@ var drag = d3.behavior.drag()
         });
     });
 
-
+// create player and add to page
 var makePlayer = function(){
-
-    var w = 20;
-    var h = 20;
     svg
       .append("rect")
       .attr({
@@ -105,16 +97,16 @@ var makePlayer = function(){
         "stroke-width": 5,
         width: playerOptions.size,
         height: playerOptions.size,
-        x: 0,//gameOptions.width/2 -w/2,
-        y: gameOptions.height/2 - h/2
+        // player stats at center of gameboard
+        x: gameOptions.width/2 ,
+        y: gameOptions.height/2 
       })
       .classed("player", true);
 };
-//Player.init(gameOptions.width/2, gameOptions.height/2);
-//
 
+//calculate distance between player and enemies 
+// to determine if there's a collision
 var detectCollision = function(){
-  var enemies = d3.selectAll(".enemies");
   var enemy;
   var player = d3.select(".player");
   var pX = player.attr("x");
@@ -123,6 +115,7 @@ var detectCollision = function(){
   var hasCollision = false;
 
   enemies.each( function(d, i){
+    // use Pythagorean theorem to calculate distance between enemy and player
     enemy = d3.select(this);
     var eX = enemy.attr("cx");
     var eY = enemy.attr("cy");
@@ -132,26 +125,22 @@ var detectCollision = function(){
 
     var distance = Math.sqrt(mX + mY);
 
+    // if there is a hit, reset score, reset time, and compare high score
     if(distance < playerOptions.hitBox){
       gameStats.highScore = Math.max(gameStats.score, gameStats.highScore);
       hasCollision = true;
       gameStats.score = 0;
-      gameStats.startTime = +new Date;
+      gameStats.startTime = new Date();
     }
   });
   return hasCollision;
 };
 
+// calculate current score  and update score on page
 var updateScore = function(){
-  var start = gameStats.startTime;
-  // count time since game start
-  var now = +new Date;
-  // set score to time passed since...
-  //gameOptions.lastTime = now - last;
-  //console.log(Math.floor((now -last )/ 100));
-
-  gameStats.score = Math.floor((now - start )/ 100);
-
+  var now = new Date();
+  // score is based on the difference the time the game started and now
+  gameStats.score = Math.floor((now - gameStats.startTime )/ 100);
 
   d3.select("#score")
     .text(gameStats.score);
@@ -160,22 +149,23 @@ var updateScore = function(){
     .text(gameStats.highScore);
 };
 
-
-
+///////////////////////////////////////////////////////////////////////////////
+/* invocate functions */
 
 makePlayer();
 d3.selectAll(".player").call(drag);
 
-//score increases every 1/10th second
-//
+update(enemies);
+
+setInterval(function(){
+  detectCollision();
+  updateScore();
+}, 100);
 
 
-// each time the enemies reset,
-// if you aren't hit
-  // increment keeps incrementing
-// if you are hit,
-  // player die;
-  // compare current score to high score
-  // if current score > high score
-    // set high score to current score
-  // score is reset to zero.
+
+
+
+
+
+
