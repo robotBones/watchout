@@ -28,6 +28,10 @@ var playerOptions = {
 ///////////////////////////////////////////////////////////////////////////////
 /* Define functions */
 
+var rand = function(n){
+  return (Math.random() * n);
+};
+
 //create main svg element
 var svg = d3.select("body")
   .append("svg")
@@ -46,38 +50,57 @@ var enemies = svg.selectAll("ellipse")
 enemies
   .enter()
   .append("ellipse")
+  // use call callbacks to get random positions and color for each item
   .attr({
-   cx:function(d) { return Math.random() * gameOptions.width ; },
-   cy:function(d) { return Math.random() * gameOptions.height ; },
-    rx: enemyOptions.rx,
-    ry: enemyOptions.ry,
-    fill: "black"
+   cx:function(d) { return rand(gameOptions.width) ; },
+   cy:function(d) { return rand(gameOptions.height) ; },
+   rx: enemyOptions.rx,
+   ry: enemyOptions.ry,
+   fill: function(d) {return "rgb("+rand(255)+","+rand(255)+","+rand(255)+")" ;},
   })
   .classed("enemies", true);
+  // This transform causes each item to start at random angle. 
+  // This is unused because css transform rotate overrides the random angle and
+  // starts the angle at zero. 
+  // Using css transform rotate because it uses a shorter time interval  than
+  // update transition, which results in each items rotating around its center.
+  //==========================
+  // .each( function(d){
+  //   console.log(this);
+  //   d3.select(this)
+  //     .attr({
+  //       transform: "rotate(" + d*10 +","+ this.cx.animVal.value+"," + this.cy.animVal.value+")"
+  //     });
+  // })
 
 // first invocation: update the position for existing enemies
 // subsequent invocation: update the position for one enemy
 var update = function(element){
+  // Multiple rx and ry by the same random factor in order to maintain
+  // the shape of the item.
+  var factor = rand(1.5) + 1;
   element
     .transition()
-    .delay(30)
+    .delay(0)
     .duration(800)
     .attr({
-      cx:function(d) { return Math.random() * gameOptions.width ; },
-      cy:function(d) { return Math.random() * gameOptions.height ; },
-      //transform: function(d){ return "rotate(" + d +","+ d+"," + d+")";}
+      cx:function(d) { return rand(gameOptions.width) ; },
+      cy:function(d) { return  rand(gameOptions.height); },
+      rx: enemyOptions.rx *factor,
+      ry: enemyOptions.ry *factor,
+      fill: function(d) {return "rgb("+rand(255)+","+rand(255)+","+rand(255)+")" ;},
     })
-    // call update() at end of transition in order to chain
+    // Call update() at end of transition in order to chain
     // transitions together. This allows us to use d3 timer mechanism
     // instead of setInterval(update(), time)
-    .each('end', function(){
+    .each('end', function(d){
       update(d3.select(this));
     });
 };
 
 
 // sets up D3 drag listener.
-// the player is draggable
+// the player is draggable.
 var drag = d3.behavior.drag()
     .on("drag", function(){
       d3.select(this)
@@ -99,7 +122,7 @@ var makePlayer = function(){
         height: playerOptions.size,
         // player stats at center of gameboard
         x: gameOptions.width/2 ,
-        y: gameOptions.height/2 
+        y: gameOptions.height/2
       })
       .classed("player", true);
 };
@@ -115,7 +138,7 @@ var detectCollision = function(){
   var hasCollision = false;
 
   enemies.each( function(d, i){
-    // use Pythagorean theorem to calculate distance between enemy and player
+    // use Pythagorean theorem to calculate distance between  enemy and player
     enemy = d3.select(this);
     var eX = enemy.attr("cx");
     var eY = enemy.attr("cy");
@@ -150,7 +173,6 @@ var updateScore = function(){
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-/* invocate functions */
 
 makePlayer();
 d3.selectAll(".player").call(drag);
@@ -161,11 +183,3 @@ setInterval(function(){
   detectCollision();
   updateScore();
 }, 100);
-
-
-
-
-
-
-
-
