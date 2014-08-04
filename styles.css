@@ -11,3 +11,34 @@ body {
   background-color: white;
   position: absolute;
 }
+
+
+.enemies {
+  -moz-animation: .75s slidein infinite ;
+  -webkit-animation: .75s slidein infinite ;
+  animation: 3s slidein infinite ;
+  -moz-transform-origin:50% 50%;
+  -webkit-transform-origin:50% 50%;
+  transform-origin:50% 50%;
+
+}
+
+@-mox-keyframes slidein {
+  100% {
+    -moz-transform:rotate(360deg);
+    
+  }
+}
+
+@-webkit-keyframes slidein {
+  100% {
+    -webkit-transform:rotate(360deg);*/
+  }
+}
+
+@keyframes slidein {
+  100% {
+    transform:rotate(360deg);
+  }
+}
+
